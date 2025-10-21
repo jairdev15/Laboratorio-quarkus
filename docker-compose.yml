@@ -1,0 +1,111 @@
+version: '3.8'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports: ["2181:2181"]
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.1
+    depends_on: ["zookeeper"]
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+    ports: ["9092:9092","29092:29092"]
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: retailx
+      POSTGRES_PASSWORD: retailx
+      POSTGRES_DB: retailxdb
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports: ["6379:6379"]
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.71.0
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4317:4317"
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    ports: ["9090:9090"]
+
+  grafana:
+    image: grafana/grafana:9.5.6
+    depends_on: ["prometheus"]
+    ports: ["3000:3000"]
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+
+  client-service:
+    container_name: laboratorio-client-service
+    build: ./client-service
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      QUARKUS_DATASOURCE_URL: jdbc:postgresql://postgres:5432/retailxdb
+      QUARKUS_DATASOURCE_USERNAME: retailx
+      QUARKUS_DATASOURCE_PASSWORD: retailx
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OTEL_COLLECTOR_ENDPOINT: http://otel-collector:4317
+      API_KEY: super-secret-apikey
+      QUARKUS_PROFILE: prod
+    ports: ["8081:8080"]
+
+  order-service:
+    container_name: laboratorio-order-service
+    build: ./order-service
+    depends_on:
+      - client-service
+      - kafka
+      - postgres
+    environment:
+      CLIENT_SERVICE_URL: http://client-service:8080/api
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      QUARKUS_DATASOURCE_URL: jdbc:postgresql://postgres:5432/retailxdb
+      QUARKUS_DATASOURCE_USERNAME: retailx
+      QUARKUS_DATASOURCE_PASSWORD: retailx
+      OTEL_COLLECTOR_ENDPOINT: http://otel-collector:4317
+      API_KEY: super-secret-apikey
+      QUARKUS_PROFILE: prod
+    ports:
+      - "8082:8080"
+
+
+  dispatch-service:
+    container_name: laboratorio-dispatch-service
+    build: ./dispatch-service
+    depends_on: ["kafka","postgres","redis"]
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_HOST: redis
+      QUARKUS_DATASOURCE_URL: jdbc:postgresql://postgres:5432/retailxdb
+      QUARKUS_DATASOURCE_USERNAME: retailx
+      QUARKUS_DATASOURCE_PASSWORD: retailx
+      OTEL_COLLECTOR_ENDPOINT: http://otel-collector:4317
+      API_KEY: super-secret-apikey
+      QUARKUS_PROFILE: prod
+    ports: ["8083:8080"]
+
+volumes:
+  pgdata:
+  grafana-data:
