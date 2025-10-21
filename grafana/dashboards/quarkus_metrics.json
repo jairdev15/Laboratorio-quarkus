@@ -1,0 +1,56 @@
+{
+  "id": null,
+  "title": "Quarkus Metrics Dashboard",
+  "schemaVersion": 36,
+  "version": 1,
+  "panels": [
+    {
+      "type": "graph",
+      "title": "HTTP Requests per Second",
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count[1m])",
+          "legendFormat": "{{method}} {{uri}}"
+        }
+      ],
+      "yaxes": [{ "format": "ops", "label": "Requests/s" }, { "format": "short" }]
+    },
+    {
+      "type": "graph",
+      "title": "Response Time (95th percentile)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))",
+          "legendFormat": "95th percentile"
+        }
+      ],
+      "yaxes": [{ "format": "s", "label": "Seconds" }, { "format": "short" }]
+    },
+    {
+      "type": "graph",
+      "title": "JVM Memory Used",
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{area='heap'} / 1024 / 1024",
+          "legendFormat": "Heap"
+        },
+        {
+          "expr": "jvm_memory_used_bytes{area='nonheap'} / 1024 / 1024",
+          "legendFormat": "Non-Heap"
+        }
+      ],
+      "yaxes": [{ "format": "MB", "label": "Memory" }, { "format": "short" }]
+    },
+    {
+      "type": "graph",
+      "title": "Kafka Messages Consumed",
+      "targets": [
+        {
+          "expr": "sum(rate(kafka_consumer_fetch_manager_metrics_records_consumed_total[1m])) by (client_id)",
+          "legendFormat": "{{client_id}}"
+        }
+      ],
+      "yaxes": [{ "format": "msg/s", "label": "Messages/s" }, { "format": "short" }]
+    }
+  ]
+}

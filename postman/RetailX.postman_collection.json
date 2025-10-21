@@ -1,0 +1,123 @@
+{
+  "info": {
+    "name": "RetailX",
+    "_postman_id": "retailx-collection",
+    "description": "RetailX collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create client",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-KEY",
+            "value": "super-secret-apikey"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Juan Perez\",\n  \"email\": \"juan@ejemplo.com\",\n  \"document\": \"DNI-12345678\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/clients",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "clients"
+          ]
+        }
+      }
+    },
+    {
+      "name": "List clients",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-API-KEY",
+            "value": "super-secret-apikey"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8081/api/clients",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "clients"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create order",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-KEY",
+            "value": "super-secret-apikey"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clientId\": 1,\n  \"total\": 150.75\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8082/api/orders",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8082",
+          "path": [
+            "api",
+            "orders"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get order",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-API-KEY",
+            "value": "super-secret-apikey"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8082/api/orders/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8082",
+          "path": [
+            "api",
+            "orders",
+            "1"
+          ]
+        }
+      }
+    }
+  ]
+}
